@@ -27,8 +27,8 @@ def create_app(config_name):
     db.init_app(app)
     login_manager.init_app(app)
     admin = Admin(app,index_view=MyAdminIndexView())
-    from .models import User,Role
-    addModelstoAdmin(admin,[User,Role],db)
+    from .models import User,Role,State
+    addModelstoAdmin(admin,[User,Role,State],db)
 
 
     from .main import main as main_blueprint

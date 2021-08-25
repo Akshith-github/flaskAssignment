@@ -5,6 +5,9 @@ from flask import current_app, request, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from app.exceptions import ValidationError
 from . import db, login_manager
+from sqlalchemy.orm import validates 
+from sqlalchemy import CheckConstraint
+import re
 
 
 class Permission:
@@ -68,14 +71,39 @@ class Role(db.Model):
         return '<Role %r>' % self.name
 
 
+class State(db.Model):
+    __tablename__ = 'states'
+    id = db.Column(db.Integer, primary_key=True)
+    statename = db.Column(db.String(25), unique=True, index=True)
+    state_residents = db.relationship('User', backref='state', lazy='dynamic')
+
+    def __repr__(self):
+        return "<State {}>".format(self.statename)
+    
+    def to_json(self):
+        json_state = {
+            # 'url': url_for('api.', id=self.id),
+            'id':self.id,
+            'statename': self.statename
+        }
+        return json_state
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
+    # __table_args__ = (CheckConstraint("REGEXP_LIKE(pancard, '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$')"),)
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
+    pancard=db.Column(db.String(10),CheckConstraint("REGEXP_LIKE(pancard, '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$')"),unique=True,index=True,)
+    state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
+
+    # @validates('pancard', include_backrefs=False)
+    # def validate_pancard(self, key, pancardNo):
+    #     assert re.fullmatch("^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$",pancardNo)
+    #     return pancardNo
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -165,7 +193,10 @@ class User(UserMixin, db.Model):
         json_user = {
             'url': url_for('api.get_user', id=self.id),
             'username': self.username,
-            'email':self.email
+            'email':self.email,
+            'pan':self.pancard,
+            'role':self.role.name,
+            'state':self.state.statename
         }
         return json_user
 
