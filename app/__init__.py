@@ -5,6 +5,7 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import config
+from .admin import Admin,MyAdminIndexView,MyModelView,addModelstoAdmin
 
 bootstrap = Bootstrap()
 mail = Mail()
@@ -25,11 +26,18 @@ def create_app(config_name):
     moment.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
+    admin = Admin(app,index_view=MyAdminIndexView())
+    from .models import User,Role
+    addModelstoAdmin(admin,[User,Role],db)
+
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
+
+    from .api import api as api_blueprint
+    app.register_blueprint(api_blueprint, url_prefix='/api/v1')
 
     return app

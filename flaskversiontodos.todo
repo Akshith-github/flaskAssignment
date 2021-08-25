@@ -1,21 +1,20 @@
 ☐ Models:
     ☐ Users
-        ☐ id 
-        ☐ name 
-        ☐ email
-        ☐ password
-        ☐ role
+        ✔ id @done (25/8/2021, 10:47:39 am)
+        ✔ name @done (25/8/2021, 10:51:16 am)
+        ✔ email @done (25/8/2021, 10:51:18 am)
+        ✔ password @done (25/8/2021, 10:51:18 am)
+        ✔ role @done (25/8/2021, 10:51:20 am)
         ☐ taxes
         ☐ Pan card
-        ☐ email
         ☐ state
         ☐ bills
 
     ☐ Roles
-        ☐ id 
-        ☐ name 
-        ☐ Users
-        ☐ permissions
+        ✔ id @done (25/8/2021, 10:52:01 am)
+        ✔ name @done (25/8/2021, 10:52:02 am)
+        ✔ Users @done (25/8/2021, 10:52:05 am)
+        ✔ permissions @done (25/8/2021, 10:52:05 am)
     
     ☐ Tax
         ☐ id
@@ -41,10 +40,13 @@
     
 ☐ Views:
     ☐ index page
+        ☐ basic components
+        ☐ About site 
+        ☐ links
 
     ☐ Authentication
-        ☐ Register
-        ☐ Login/Logout
+        ✔ Register @done (25/8/2021, 10:52:22 am)
+        ✔ Login/Logout @done (25/8/2021, 10:52:23 am)
     
     ☐ Flask admin
 
