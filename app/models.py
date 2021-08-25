@@ -1,3 +1,4 @@
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
@@ -88,6 +89,7 @@ class State(db.Model):
         }
         return json_state
 
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     # __table_args__ = (CheckConstraint("REGEXP_LIKE(pancard, '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$')"),)
@@ -97,8 +99,10 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=False)
-    pancard=db.Column(db.String(10),CheckConstraint("REGEXP_LIKE(pancard, '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$')"),unique=True,index=True,)
+    pancard=db.Column(db.String(10),CheckConstraint("pancard ~ '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$'"),unique=True,index=True,)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
+    taxbills = db.relationship('Taxbill', backref='payer', lazy='dynamic',primaryjoin="Taxbill.payer_id==User.id")
+    created_bills = db.relationship('Taxbill', backref='creator', lazy='dynamic',primaryjoin="Taxbill.creator_id==User.id")
 
     # @validates('pancard', include_backrefs=False)
     # def validate_pancard(self, key, pancardNo):
@@ -229,3 +233,24 @@ login_manager.anonymous_user = AnonymousUser
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+Status={
+    "UNPAID" : 1,
+    "DUE" : 2,
+    "PAID" : 4,
+    "4":"PAID",
+    "2":"DUE",
+    "1":"UNPAID"
+}
+
+class Taxbill(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    payer_id = db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
+    billnumber = db.Column(db.Integer,unique=True,index=True,nullable=False)
+    total_amount = db.Column(db.Integer)
+    due_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.Integer,default=1,nullable=False)
+
+    def __repr__(self):
+        return "< Bill No: {} to {}>".format(self.billnumber,self.creator)
