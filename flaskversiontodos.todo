@@ -1,0 +1,67 @@
+☐ Models:
+    ☐ Users
+        ☐ id 
+        ☐ name 
+        ☐ email
+        ☐ password
+        ☐ role
+        ☐ taxes
+        ☐ Pan card
+        ☐ email
+        ☐ state
+        ☐ bills
+
+    ☐ Roles
+        ☐ id 
+        ☐ name 
+        ☐ Users
+        ☐ permissions
+    
+    ☐ Tax
+        ☐ id
+        ☐ related bill
+        ☐ type
+        ☐ amount
+    
+    ☐ tax type
+        ☐ index
+        ☐ name
+        ☐ bills
+    
+    ☐ Tax Bill
+        ☐ id
+        ☐ payer
+        ☐ creator
+        ☐ bill number
+        ☐ taxes 
+        ☐ total amount
+        ☐ intrest feature
+        ☐ due date
+        ☐ status
+    
+☐ Views:
+    ☐ index page
+
+    ☐ Authentication
+        ☐ Register
+        ☐ Login/Logout
+    
+    ☐ Flask admin
+
+    ☐ Tax payer pages
+        ☐ profile page 
+        ☐ bills
+            ☐ active
+            ☐ paid
+            ☐ pending
+            ☐ recently updated bills
+        ☐ filtering methods
+        ☐ pay bill
+    
+    ☐ tax accountant
+        ☐ create bills
+        ☐ edit unpaid bills
+        ☐ view all bills
+        ☐ view created bills
+
+☐ Test cases

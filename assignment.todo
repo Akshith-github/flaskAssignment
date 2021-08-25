@@ -1,0 +1,59 @@
+CORE infrastructure Tasks:
+    ☐ Tools Used 
+    ☐ Dockerize Solution
+    ☐ Registration and Roles:
+        ☐ Roles 
+            ☐ tax-payer
+            ☐ tax-accountant
+            ☐ admin
+            ☐ permissions
+        ☐ Registration
+            ☐Creating / salting /hashing passwords
+            ☐ setting Role of User [how]
+    ☐ API
+        ☐ Auth system
+            ☐ token based authentication @JWT
+            ☐ username and password
+            ☐ handling roles in api
+            ☐ only once authentication or per every request
+    ☐ DATABASE
+        ☐ Postgresql
+
+Features Tasks:
+    ☐ tax-accountant and admins can
+        ☐ list view edit tax-payers
+    ☐ management of tax-payers by tax accountant
+    ☐ Tax System & also GST 
+        ☐ State tax depends on "state" of tax-payer.If it is a union territory, then no state tax
+        ☐ Total tax = state tax + central tax
+    ☐ Tax 
+        ☐ tax can be SGST, CGST, state tax, arrears, fines, etc
+        ☐ features such as reducing interest rates, etc
+        ☐ how will you handle dates
+            ☐ is it needed to handle timezone information in your database ?
+    ☐  Create tax due
+        ☐ can be done only by "tax-accountant" role
+        ☐ inputs (PAN card of tax-payer, income from salary, income from share market, etc etc)
+        ☐ calculate total tax due
+        ☐ sets status as NEW or DELAYED based on due date
+    ☐  Edit tax due
+        ☐ can be done only by "tax-accountant" role
+        ☐ But it cannot be done if tax is already paid.
+        ☐ Can you save previous history ?
+            ☐ "double safety" - logic in the code as well as database constraints
+    ☐ tax as paid
+        ☐ can only be done by tax-payer
+        ☐ don't need to do any UPI integration. Just create a dummy
+    ☐ Ability to list and view tax due based on the filter applied
+        ☐ select by date of creation, date of update, state of tax (NEW, PAID, DELAYED), etc
+        ☐ This action can be done by all : "tax-payer", "tax-accountant" and "admin" roles
+        ☐ "tax-payer" can only see his own taxes
+        ☐ "tax-accountant" and "admin" can see everyone's taxes
+    ☐ Make sure there are no security loopholes here.
+        ☐ test-cases to illustrate no security loopholes here.
+
+Test-cases Tasks:
+    ☐ test-cases for security
+    ☐ make test case after each feature is built
+
+-----------------------------
