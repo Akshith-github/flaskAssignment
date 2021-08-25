@@ -42,5 +42,6 @@ nosetests.xml
 assignvenv
 .env
 .vscode
-
+*.task
 *.todo
+assignment.todo
