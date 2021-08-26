@@ -77,7 +77,7 @@ class State(db.Model):
     __tablename__ = 'states'
     id = db.Column(db.Integer, primary_key=True)
     statename = db.Column(db.String(25), unique=True, index=True)
-    state_residents = db.relationship('User', backref='state', lazy='dynamic')
+    state_residents = db.relationship('User', backref='state', lazy='select')
     taxes = db.relationship('Standardtaxrecord', backref='state',lazy='dynamic',primaryjoin="Standardtaxrecord.state_id==State.id")
     # taxes
     def __repr__(self):
@@ -247,7 +247,7 @@ Status={
 
 Taxbillstandardtaxrecordtaxes = db.Table(
     'taxbillsstandardtaxrecordtaxes',
-    # Base.metadata,
+    Base.metadata,
     db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id')),
     db.Column('standardtaxrecord_id', db.Integer, 
             db.ForeignKey('standardtaxrecords.id'))
@@ -255,7 +255,7 @@ Taxbillstandardtaxrecordtaxes = db.Table(
 
 Taxbilltaxrecordpaidtaxes = db.Table(
     'taxbilltaxrecordpaidtaxes',
-    # Base.metadata,
+    Base.metadata,
     db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id')),
     db.Column('taxrecord_id', db.Integer, 
             db.ForeignKey('taxrecords.id'))
@@ -271,14 +271,16 @@ class Taxbill(db.Model):
                     # primaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.standardtaxrecord_id",
                     # secondaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.taxbill_id",
                     backref=db.backref('bills', lazy='dynamic'),
-                    lazy="dynamic"
+                    lazy="dynamic",
+                    post_update=True
                     )
     paidtaxes = db.relationship("Taxrecord",
                     secondary=Taxbilltaxrecordpaidtaxes,
                     # primaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.standardtaxrecord_id",
                     # secondaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.taxbill_id",
                     backref=db.backref('bills', lazy='dynamic'),
-                    lazy="dynamic"
+                    lazy="dynamic",
+                    post_update=True
                     )
     # taxable_value
     # paid_taxes
