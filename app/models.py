@@ -252,6 +252,14 @@ Taxbillstandardtaxrecordtaxes = db.Table(
     db.Column('standardtaxrecord_id', db.Integer, 
             db.ForeignKey('standardtaxrecords.id'))
 )
+
+Taxbilltaxrecordpaidtaxes = db.Table(
+    'taxbilltaxrecordpaidtaxes',
+    # Base.metadata,
+    db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id')),
+    db.Column('taxrecord_id', db.Integer, 
+            db.ForeignKey('taxrecords.id'))
+)
 class Taxbill(db.Model):
     __tablename__ = 'taxbill'
     id = db.Column(db.Integer, primary_key=True)
@@ -260,6 +268,13 @@ class Taxbill(db.Model):
     billnumber = db.Column(db.Integer,unique=True,index=True,nullable=False)
     taxes = db.relationship("Standardtaxrecord",
                     secondary=Taxbillstandardtaxrecordtaxes,
+                    # primaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.standardtaxrecord_id",
+                    # secondaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.taxbill_id",
+                    backref=db.backref('bills', lazy='dynamic'),
+                    lazy="dynamic"
+                    )
+    paidtaxes = db.relationship("Taxrecord",
+                    secondary=Taxbilltaxrecordpaidtaxes,
                     # primaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.standardtaxrecord_id",
                     # secondaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.taxbill_id",
                     backref=db.backref('bills', lazy='dynamic'),
