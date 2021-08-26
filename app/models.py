@@ -300,7 +300,6 @@ class Standardtaxrecord(db.Model):
 
     allrelatedrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
         primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id")
-    # activerecord_id=db.Column(db.Integer, db.ForeignKey('taxrecords.id'))
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
 
 class Taxrecord(db.Model):
@@ -309,5 +308,6 @@ class Taxrecord(db.Model):
     percent = db.Column(db.Float)
 
     standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
-    # parent = db.relationship('Standardtaxrecord', backref='activerecord',  uselist=False,
-    #     primaryjoin="Taxrecord.id==Standardtaxrecord.activerecord_id")
+    parent_id=db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
+    activeparent = db.relationship('Standardtaxrecord', backref='activechild',  uselist=False,
+        primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
