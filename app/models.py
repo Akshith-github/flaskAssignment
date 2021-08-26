@@ -9,7 +9,8 @@ from . import db, login_manager
 from sqlalchemy.orm import validates 
 from sqlalchemy import CheckConstraint
 import re
-
+from sqlalchemy.ext.declarative import declarative_base
+Base = declarative_base()
 
 class Permission:
     FOLLOW = 1
@@ -244,12 +245,26 @@ Status={
     "1":"UNPAID"
 }
 
+Taxbillstandardtaxrecordtaxes = db.Table(
+    'taxbillsstandardtaxrecordtaxes',
+    # Base.metadata,
+    db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id')),
+    db.Column('standardtaxrecord_id', db.Integer, 
+            db.ForeignKey('standardtaxrecords.id'))
+)
 class Taxbill(db.Model):
     __tablename__ = 'taxbill'
     id = db.Column(db.Integer, primary_key=True)
     payer_id = db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
     billnumber = db.Column(db.Integer,unique=True,index=True,nullable=False)
+    taxes = db.relationship("Standardtaxrecord",
+                    secondary=Taxbillstandardtaxrecordtaxes,
+                    # primaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.standardtaxrecord_id",
+                    # secondaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.taxbill_id",
+                    backref=db.backref('bills', lazy='dynamic'),
+                    lazy="dynamic"
+                    )
     # taxable_value
     # paid_taxes
     # othertaxespaid
