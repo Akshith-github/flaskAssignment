@@ -27,13 +27,13 @@ def create_app(config_name):
     db.init_app(app)
     login_manager.init_app(app)
     admin = Admin(app,index_view=MyAdminIndexView())
-    from .models import User,Role,State,Taxbill,Standardtaxrecord,Taxrecord
+    # from .models import User,Role,State,Taxbill,Standardtaxrecord,Taxrecord
     # Role
     # State
     # Taxbill
     # Standardtaxrecord
     # Taxrecord
-    addModelstoAdmin(admin,[User,Role,State,Taxbill,Standardtaxrecord,Taxrecord],db)
+    # addModelstoAdmin(admin,[User,Role,State,Taxbill,Standardtaxrecord,Taxrecord],db)
 
 
     from .main import main as main_blueprint
