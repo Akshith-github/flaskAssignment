@@ -77,7 +77,8 @@ class State(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     statename = db.Column(db.String(25), unique=True, index=True)
     state_residents = db.relationship('User', backref='state', lazy='dynamic')
-
+    taxes = db.relationship('Standardtaxrecord', backref='state',lazy='dynamic',primaryjoin="Standardtaxrecord.state_id==State.id")
+    # taxes
     def __repr__(self):
         return "<State {}>".format(self.statename)
     
@@ -244,13 +245,37 @@ Status={
 }
 
 class Taxbill(db.Model):
+    __tablename__ = 'taxbill'
     id = db.Column(db.Integer, primary_key=True)
     payer_id = db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
     billnumber = db.Column(db.Integer,unique=True,index=True,nullable=False)
+    # taxable_value
+    # paid_taxes
+    # othertaxespaid
+    # enum status
     total_amount = db.Column(db.Integer)
     due_date = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.Integer,default=1,nullable=False)
 
     def __repr__(self):
         return "< Bill No: {} to {}>".format(self.billnumber,self.creator)
+
+class Standardtaxrecord(db.Model):
+    __tablename__ = 'standardtaxrecords'
+    id = db.Column(db.Integer, primary_key=True)
+    taxname = db.Column(db.String(10), index=True)
+
+    allrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
+        primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id")
+    activerecord_id=db.Column(db.Integer, db.ForeignKey('taxrecords.id'))
+    state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
+
+class Taxrecord(db.Model):
+    __tablename__ = 'taxrecords'
+    id = db.Column(db.Integer, primary_key=True)
+    percent = db.Column(db.Float)
+
+    standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
+    parent = db.relationship('Standardtaxrecord', backref='activerecord',  uselist=False,
+        primaryjoin="Taxrecord.id==Standardtaxrecord.activerecord_id")
