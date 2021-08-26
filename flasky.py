@@ -2,7 +2,7 @@ import os
 import click
 from flask_migrate import Migrate
 from app import create_app, db
-from app.models import User, Role, Permission , State,Taxbill
+from app.models import User, Role, Permission , State , Taxbillstandardtaxrecordtaxes , Taxbilltaxrecordpaidtaxes , Taxbill , Standardtaxrecord , Taxrecord
 from dotenv import load_dotenv
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -17,7 +17,13 @@ migrate = Migrate(app, db)
 @app.shell_context_processor
 def make_shell_context():
     return dict(db=db, User=User, Role=Role, Permission=Permission,
-    State=State, Taxbill=Taxbill)
+    State=State, 
+    Taxbillstandardtaxrecordtaxes=Taxbillstandardtaxrecordtaxes,
+    Taxbilltaxrecordpaidtaxes=Taxbilltaxrecordpaidtaxes,
+    Taxbill=Taxbill,
+    Standardtaxrecord=Standardtaxrecord,
+    Taxrecord=Taxrecord
+    )
 
 
 @app.cli.command()

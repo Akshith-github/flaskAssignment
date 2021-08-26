@@ -245,6 +245,26 @@ Status={
     "1":"UNPAID"
 }
 
+
+class Standardtaxrecord(db.Model):
+    __tablename__ = 'standardtaxrecords'
+    id = db.Column(db.Integer, primary_key=True)
+    taxname = db.Column(db.String(10), index=True)
+
+    allrelatedrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
+        primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id")
+    state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
+
+class Taxrecord(db.Model):
+    __tablename__ = 'taxrecords'
+    id = db.Column(db.Integer, primary_key=True)
+    percent = db.Column(db.Float)
+
+    standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
+    parent_id=db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
+    activeparent = db.relationship('Standardtaxrecord', backref='activechild',  uselist=False,
+        primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
+
 Taxbillstandardtaxrecordtaxes = db.Table(
     'taxbillsstandardtaxrecordtaxes',
     Base.metadata,
@@ -260,6 +280,7 @@ Taxbilltaxrecordpaidtaxes = db.Table(
     db.Column('taxrecord_id', db.Integer, 
             db.ForeignKey('taxrecords.id'))
 )
+
 class Taxbill(db.Model):
     __tablename__ = 'taxbill'
     id = db.Column(db.Integer, primary_key=True)
@@ -293,21 +314,4 @@ class Taxbill(db.Model):
     def __repr__(self):
         return "< Bill No: {} to {}>".format(self.billnumber,self.creator)
 
-class Standardtaxrecord(db.Model):
-    __tablename__ = 'standardtaxrecords'
-    id = db.Column(db.Integer, primary_key=True)
-    taxname = db.Column(db.String(10), index=True)
-
-    allrelatedrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
-        primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id")
-    state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
-
-class Taxrecord(db.Model):
-    __tablename__ = 'taxrecords'
-    id = db.Column(db.Integer, primary_key=True)
-    percent = db.Column(db.Float)
-
-    standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
-    parent_id=db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
-    activeparent = db.relationship('Standardtaxrecord', backref='activechild',  uselist=False,
-        primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
+#
