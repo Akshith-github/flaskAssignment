@@ -70,7 +70,7 @@ class Role(db.Model):
         return self.permissions & perm == perm
 
     def __repr__(self):
-        return '<Role %r>' % self.name
+        return '<{} Role {}>'.format(self.id,self.name)
 
 
 class State(db.Model):
@@ -81,7 +81,7 @@ class State(db.Model):
     taxes = db.relationship('Standardtaxrecord', backref='state',lazy='dynamic',primaryjoin="Standardtaxrecord.state_id==State.id")
     # taxes
     def __repr__(self):
-        return "<State {}>".format(self.statename)
+        return "<{} State {}>".format(self.id,self.statename)
     
     def to_json(self):
         json_state = {
@@ -193,7 +193,7 @@ class User(UserMixin, db.Model):
         return self.can(Permission.ADMIN)
 
     def __repr__(self):
-        return '<User %r>' % self.username
+        return '<{} User {} [{}] {}>'.format(self.id,self.username,self.pancard if self.pancard else "pancard:NA", self.state.statename if self.state else "state:NA")
     
     def to_json(self):
         json_user = {
@@ -202,7 +202,7 @@ class User(UserMixin, db.Model):
             'email':self.email,
             'pan':self.pancard,
             'role':self.role.name,
-            'state':self.state.statename
+            'state':self.state.statename if self.state else "NA"
         }
         return json_user
 
@@ -255,6 +255,12 @@ class Standardtaxrecord(db.Model):
         primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id",post_update=True)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
 
+    def  __repr__(self):
+        return "<{} StdTax {} {}>".format(self.id,\
+            self.taxname if self.taxname else "taxname:NA",
+            self.state.statename if self.state else "state:NA",
+            )
+
 class Taxrecord(db.Model):
     __tablename__ = 'taxrecords'
     id = db.Column(db.Integer, primary_key=True)
@@ -264,6 +270,13 @@ class Taxrecord(db.Model):
     parent_id=db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
     activeparent = db.relationship('Standardtaxrecord', backref='activechild',  uselist=False,
         primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
+
+    def __repr__(self):
+        return "{} TaxRec @{} @{} {}%".format(self.id,
+        self.activeparent.taxname if self.activeparent.taxname else "taxname:NA",
+        self.activeparent.state.statename if self.activeparent.state else "state:NA",
+        self.percent if self.percent else "percent:NA"
+        )
 
 Taxbillstandardtaxrecordtaxes = db.Table(
     'taxbillsstandardtaxrecordtaxes',
