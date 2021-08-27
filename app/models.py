@@ -23,7 +23,7 @@ class Permission:
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True)
+    name = db.Column(db.String(64), unique=True,nullable=False)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
     users = db.relationship('User', backref='role', lazy='dynamic')
@@ -76,7 +76,7 @@ class Role(db.Model):
 class State(db.Model):
     __tablename__ = 'states'
     id = db.Column(db.Integer, primary_key=True)
-    statename = db.Column(db.String(25), unique=True, index=True)
+    statename = db.Column(db.String(25), unique=True, index=True,nullable=False)
     state_residents = db.relationship('User', backref='state', lazy='select')
     taxes = db.relationship('Standardtaxrecord', backref='state',lazy='dynamic',primaryjoin="Standardtaxrecord.state_id==State.id")
     # taxes
@@ -96,12 +96,12 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     # __table_args__ = (CheckConstraint("REGEXP_LIKE(pancard, '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$')"),)
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(64), unique=True, index=True)
-    username = db.Column(db.String(64), unique=True, index=True)
-    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+    email = db.Column(db.String(64), unique=True, index=True,nullable=False)
+    username = db.Column(db.String(64), unique=True, index=True,nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'),nullable=False)
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=True)
-    pancard=db.Column(db.String(10),CheckConstraint("pancard ~ '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$'"),unique=True,index=True,)
+    pancard=db.Column(db.String(10),CheckConstraint("pancard ~ '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$'"),unique=True,index=True)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
     taxbills = db.relationship('Taxbill', backref='payer', lazy='dynamic',primaryjoin="Taxbill.payer_id==User.id")
     created_bills = db.relationship('Taxbill', backref='creator', lazy='dynamic',primaryjoin="Taxbill.creator_id==User.id")
@@ -247,10 +247,12 @@ Status={
 
 
 class Standardtaxrecord(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint('taxname', 'state_id', name='unique_taxname_state_id'),
+    )
     __tablename__ = 'standardtaxrecords'
     id = db.Column(db.Integer, primary_key=True)
-    taxname = db.Column(db.String(10), index=True)
-
+    taxname = db.Column(db.String(10), index=True,unique=True,nullable=False)
     allrelatedrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
         primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id",post_update=True)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
@@ -264,7 +266,7 @@ class Standardtaxrecord(db.Model):
 class Taxrecord(db.Model):
     __tablename__ = 'taxrecords'
     id = db.Column(db.Integer, primary_key=True)
-    percent = db.Column(db.Float)
+    percent = db.Column(db.Float,nullable=False)
 
     standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
     parent_id=db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
@@ -321,7 +323,7 @@ class Taxbill(db.Model):
     # othertaxespaid
     # enum status
     total_amount = db.Column(db.Integer)
-    due_date = db.Column(db.DateTime, default=datetime.utcnow)
+    due_date = db.Column(db.DateTime, default=datetime.utcnow,nullable=False)
     status = db.Column(db.Integer,default=1,nullable=False)
 
     def __repr__(self):
