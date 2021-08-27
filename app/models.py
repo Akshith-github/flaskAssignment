@@ -237,12 +237,12 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 Status={
-    "UNPAID" : 1,
-    "DUE" : 2,
+    "NEW" : 1,
+    "DELAYED" : 2,
     "PAID" : 4,
     "4":"PAID",
-    "2":"DUE",
-    "1":"UNPAID"
+    "2":"DELAYED",
+    "1":"NEW"
 }
 
 
@@ -252,7 +252,7 @@ class Standardtaxrecord(db.Model):
     taxname = db.Column(db.String(10), index=True)
 
     allrelatedrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
-        primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id")
+        primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id",post_update=True)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
 
 class Taxrecord(db.Model):
@@ -267,7 +267,7 @@ class Taxrecord(db.Model):
 
 Taxbillstandardtaxrecordtaxes = db.Table(
     'taxbillsstandardtaxrecordtaxes',
-    Base.metadata,
+    # Base.metadata,
     db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id')),
     db.Column('standardtaxrecord_id', db.Integer, 
             db.ForeignKey('standardtaxrecords.id'))
@@ -275,7 +275,7 @@ Taxbillstandardtaxrecordtaxes = db.Table(
 
 Taxbilltaxrecordpaidtaxes = db.Table(
     'taxbilltaxrecordpaidtaxes',
-    Base.metadata,
+    # Base.metadata,
     db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id')),
     db.Column('taxrecord_id', db.Integer, 
             db.ForeignKey('taxrecords.id'))
@@ -289,16 +289,16 @@ class Taxbill(db.Model):
     billnumber = db.Column(db.Integer,unique=True,index=True,nullable=False)
     taxes = db.relationship("Standardtaxrecord",
                     secondary=Taxbillstandardtaxrecordtaxes,
-                    primaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.standardtaxrecord_id",
-                    secondaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.taxbill_id",
+                    # primaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.standardtaxrecord_id",
+                    # secondaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.taxbill_id",
                     backref=db.backref('bills', lazy='dynamic'),
                     lazy="dynamic",
                     post_update=True
                     )
     paidtaxes = db.relationship("Taxrecord",
                     secondary=Taxbilltaxrecordpaidtaxes,
-                    primaryjoin="Taxbill.id==Taxbilltaxrecordpaidtaxes.c.taxrecord_id",
-                    secondaryjoin="Taxbill.id==Taxbilltaxrecordpaidtaxes.c.taxbill_id",
+                    # primaryjoin="Taxbill.id==Taxbilltaxrecordpaidtaxes.c.taxrecord_id",
+                    # secondaryjoin="Taxbill.id==Taxbilltaxrecordpaidtaxes.c.taxbill_id",
                     backref=db.backref('bills', lazy='dynamic'),
                     lazy="dynamic",
                     post_update=True
@@ -314,4 +314,7 @@ class Taxbill(db.Model):
     def __repr__(self):
         return "< Bill No: {} to {}>".format(self.billnumber,self.creator)
 
-#
+    @property
+    def status_msg(self):
+        return Status[str(self.status)]
+# 

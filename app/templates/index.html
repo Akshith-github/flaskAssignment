@@ -1,9 +1,22 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}Flasky{% endblock %}
+{% block title %}Smart GST Portal{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
-    <h1>Hello, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Stranger{% endif %}!</h1>
+    <h1>Hello, 
+        {% if current_user.is_authenticated %}
+        {{ current_user.username }}
+        {% else %}
+        Stranger{% endif %}!</h1>
+    {% if  current_user.is_authenticated %}
+        {% if ProfileFormObj %}
+            {{ wtf.quick_form(ProfileFormObj,action=url_for('main.profileform')) }}
+        {% else %}
+            {{ wtf.quick_form(ProfileForm().configure_to_current_user(),action=url_for('main.profileform')) }}
+        {% endif %}
+    {% endif %}
 </div>
+{%include 'taxes2.html' %}
 {% endblock %}

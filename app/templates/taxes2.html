@@ -1,0 +1,50 @@
+<div class="panel panel-default">
+    <div class="panel-heading">Paid taxes</div>
+    <div class="panel-body">
+        <p>Paid taxes are highlighted with green background.
+            <span style="height:1rem;width:1rem;background-color:lightgreen;padding:0.2rem;border-radius:4px;">
+                paid
+            </span>
+        </p>
+        <p>pending are with lightyellow background color.
+            <span style="height:1rem;width:1rem;background-color:lightyellow;padding:0.2rem;border-radius:4px;">
+                pending
+            </span>
+        </p> 
+        <p>Delayed taxes are highlighted with red colour
+            <span style="height:1rem;width:1rem;background-color:red;padding:0.2rem;border-radius:4px;">
+                delayed
+            </span>
+        </p>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>related accountant</th>
+                <th>tax amount</th>
+                <th>duedate</th>
+                <th>status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bill in current_user.taxbills.all()   %}
+                <tr
+                    style="background-color:
+                    {{
+                        'lightgreen' if(bill.status_msg == 'PAID') else 'lightyellow' if(bill.status_msg == 'NEW') else 'red'
+                    }}
+                    "
+                >
+                    <th scope="row">1</th>
+                    <td>{{bill.creator.username}}</td>
+                    <td>{{bill.total_amount}}</td>
+                    <td>{{bill.due_date.strftime("%m/%d/%Y  %H:%M:%S")}}</td>
+                    <td>
+                        {{bill.status_msg}}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
