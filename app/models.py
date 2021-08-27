@@ -252,7 +252,7 @@ class Standardtaxrecord(db.Model):
     )
     __tablename__ = 'standardtaxrecords'
     id = db.Column(db.Integer, primary_key=True)
-    taxname = db.Column(db.String(10), index=True,unique=True,nullable=False)
+    taxname = db.Column(db.String(10), index=True,nullable=False)
     allrelatedrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
         primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id",post_update=True)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
@@ -268,7 +268,7 @@ class Taxrecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     percent = db.Column(db.Float,nullable=False)
 
-    standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
+    standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'),nullable=False)
     parent_id=db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
     activeparent = db.relationship('Standardtaxrecord', backref='activechild',  uselist=False,
         primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
@@ -318,9 +318,7 @@ class Taxbill(db.Model):
                     lazy="dynamic",
                     post_update=True
                     )
-    # taxable_value
-    # paid_taxes
-    # othertaxespaid
+    taxable_value = db.Column(db.Integer,nullable=False)
     # enum status
     total_amount = db.Column(db.Integer)
     due_date = db.Column(db.DateTime, default=datetime.utcnow,nullable=False)
