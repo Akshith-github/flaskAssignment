@@ -100,7 +100,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
-    confirmed = db.Column(db.Boolean, default=False)
+    confirmed = db.Column(db.Boolean, default=True)
     pancard=db.Column(db.String(10),CheckConstraint("pancard ~ '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$'"),unique=True,index=True,)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
     taxbills = db.relationship('Taxbill', backref='payer', lazy='dynamic',primaryjoin="Taxbill.payer_id==User.id")

@@ -18,5 +18,7 @@
         {% endif %}
     {% endif %}
 </div>
-{%include 'taxes2.html' %}
+{% if  current_user.is_authenticated %}
+    {%include 'taxes2.html' %}
+{% endif %}
 {% endblock %}
