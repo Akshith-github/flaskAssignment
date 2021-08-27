@@ -236,15 +236,6 @@ login_manager.anonymous_user = AnonymousUser
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-Status={
-    "NEW" : 1,
-    "DELAYED" : 2,
-    "PAID" : 4,
-    "4":"PAID",
-    "2":"DELAYED",
-    "1":"NEW"
-}
-
 
 class Standardtaxrecord(db.Model):
     __table_args__ = (
@@ -296,6 +287,15 @@ Taxbilltaxrecordpaidtaxes = db.Table(
             db.ForeignKey('taxrecords.id'))
 )
 
+Status={
+    "NEW" : 1,
+    "DELAYED" : 2,
+    "PAID" : 4,
+    "4":"PAID",
+    "2":"DELAYED",
+    "1":"NEW"
+}
+
 class Taxbill(db.Model):
     __tablename__ = 'taxbill'
     id = db.Column(db.Integer, primary_key=True)
@@ -318,7 +318,7 @@ class Taxbill(db.Model):
                     lazy="dynamic",
                     post_update=True
                     )
-    taxable_value = db.Column(db.Integer,nullable=False)
+    taxable_value = db.Column(db.Integer,default=0,nullable=False)
     # enum status
     total_amount = db.Column(db.Integer)
     due_date = db.Column(db.DateTime, default=datetime.utcnow,nullable=False)
