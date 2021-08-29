@@ -10,6 +10,7 @@ from sqlalchemy.orm import validates
 from sqlalchemy import CheckConstraint
 import re
 from sqlalchemy.ext.declarative import declarative_base
+from . import db, login_manager
 Base = declarative_base()
 
 class Permission:
@@ -23,7 +24,7 @@ class Permission:
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True,nullable=False)
+    name = db.Column(db.String(64), unique=True)
     default = db.Column(db.Boolean, default=False, index=True)
     permissions = db.Column(db.Integer)
     users = db.relationship('User', backref='role', lazy='dynamic')
@@ -71,12 +72,20 @@ class Role(db.Model):
 
     def __repr__(self):
         return '<{} Role {}>'.format(self.id,self.name)
+    
+    def to_json(self):
+        json_role = {
+            # 'url': url_for('api.', id=self.id),
+            'id':self.id,
+            'role name': self.name,
+            'users count': len(Role.query.all())}
+        return json_role
 
 
 class State(db.Model):
     __tablename__ = 'states'
     id = db.Column(db.Integer, primary_key=True)
-    statename = db.Column(db.String(25), unique=True, index=True,nullable=False)
+    statename = db.Column(db.String(25), unique=True, index=True)
     state_residents = db.relationship('User', backref='state', lazy='select')
     taxes = db.relationship('Standardtaxrecord', backref='state',lazy='dynamic',primaryjoin="Standardtaxrecord.state_id==State.id")
     # taxes
@@ -87,7 +96,8 @@ class State(db.Model):
         json_state = {
             # 'url': url_for('api.', id=self.id),
             'id':self.id,
-            'statename': self.statename
+            'statename': self.statename,
+            'residentscount':len(State.query.all())
         }
         return json_state
 
@@ -96,9 +106,9 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     # __table_args__ = (CheckConstraint("REGEXP_LIKE(pancard, '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$')"),)
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(64), unique=True, index=True,nullable=False)
-    username = db.Column(db.String(64), unique=True, index=True,nullable=False)
-    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'),nullable=False)
+    email = db.Column(db.String(64), unique=True, index=True)
+    username = db.Column(db.String(64), unique=True, index=True)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=True)
     pancard=db.Column(db.String(10),CheckConstraint("pancard ~ '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$'"),unique=True,index=True)
@@ -200,9 +210,10 @@ class User(UserMixin, db.Model):
             'url': url_for('api.get_user', id=self.id),
             'username': self.username,
             'email':self.email,
-            'pan':self.pancard,
+            'pancard':self.pancard,
             'role':self.role.name,
-            'state':self.state.statename if self.state else "NA"
+            'state':self.state.statename if self.state else "NA",
+            'pending_bills':len(self.taxbills.filter(Taxbill.status<4).all())
         }
         return json_user
 
@@ -243,7 +254,7 @@ class Standardtaxrecord(db.Model):
     )
     __tablename__ = 'standardtaxrecords'
     id = db.Column(db.Integer, primary_key=True)
-    taxname = db.Column(db.String(10), index=True,nullable=False)
+    taxname = db.Column(db.String(10))
     allrelatedrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
         primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id",post_update=True)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
@@ -253,13 +264,24 @@ class Standardtaxrecord(db.Model):
             self.taxname if self.taxname else "taxname:NA",
             self.state.statename if self.state else "state:NA",
             )
+    
+    def to_json(self):
+        json_stdtax={
+            "id": self.id,
+            "type":"standard",
+            "taxname":self.taxname,
+            "state":self.state.statename if self.state else "NA",
+            "current_tax_rec_id":self.activechild[0].id  if (self.activechild and len(self.activechild)==1) else "NA",
+            "current_tax_percent":self.activechild[0].percent if(self.activechild and len(self.activechild)==1) else "NA",
+            "billscount":len(self.bills.all())}
+        return json_stdtax
 
 class Taxrecord(db.Model):
     __tablename__ = 'taxrecords'
     id = db.Column(db.Integer, primary_key=True)
-    percent = db.Column(db.Float,nullable=False)
+    percent = db.Column(db.Float)
 
-    standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'),nullable=False)
+    standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
     parent_id=db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
     activeparent = db.relationship('Standardtaxrecord', backref='activechild',  uselist=False,
         primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
@@ -268,23 +290,38 @@ class Taxrecord(db.Model):
         return "{} TaxRec @{} @{} {}%".format(self.id,
         self.activeparent.taxname if self.activeparent.taxname else "taxname:NA",
         self.activeparent.state.statename if self.activeparent.state else "state:NA",
-        self.percent if self.percent else "percent:NA"
-        )
+        self.percent if self.percent else "percent:NA")
 
+    def to_json(self):
+        json_taxrec={
+            "id": self.id,
+            "type":"record(version) of standard tax",
+            "taxname":self.standard.taxname,
+            "state":self.standard.state.statename if self.standard.state else "NA",
+            "standard_tax_rec_id":self.standard.id,
+            "requested_taxrec_tax_percent":self.percent,
+            "paidbillscount":len(self.bills.all())}
+        return json_taxrec
+
+from sqlalchemy import UniqueConstraint
 Taxbillstandardtaxrecordtaxes = db.Table(
     'taxbillsstandardtaxrecordtaxes',
+    # db.UniqueConstraint('taxbill_id', 'standardtaxrecord_id', name='unique_keys_id'),
     # Base.metadata,
-    db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id')),
+    db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id'),primary_key=True),
     db.Column('standardtaxrecord_id', db.Integer, 
-            db.ForeignKey('standardtaxrecords.id'))
+            db.ForeignKey('standardtaxrecords.id'),primary_key=True),
+    UniqueConstraint('taxbill_id', 'standardtaxrecord_id', name='uniquekeypairs1')
 )
 
 Taxbilltaxrecordpaidtaxes = db.Table(
     'taxbilltaxrecordpaidtaxes',
+    # db.UniqueConstraint('taxbill_id', 'taxrecord_id', name='unique_keys_id'),
     # Base.metadata,
-    db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id')),
+    db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id'),primary_key=True),
     db.Column('taxrecord_id', db.Integer, 
-            db.ForeignKey('taxrecords.id'))
+            db.ForeignKey('taxrecords.id'),primary_key=True),
+    UniqueConstraint('taxbill_id', 'taxrecord_id', name='uniquekeypairs2')
 )
 
 Status={
@@ -299,9 +336,9 @@ Status={
 class Taxbill(db.Model):
     __tablename__ = 'taxbill'
     id = db.Column(db.Integer, primary_key=True)
-    payer_id = db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
-    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'),nullable=False)
-    billnumber = db.Column(db.Integer,unique=True,index=True,nullable=False)
+    payer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    billnumber = db.Column(db.Integer,unique=True,index=True)
     taxes = db.relationship("Standardtaxrecord",
                     secondary=Taxbillstandardtaxrecordtaxes,
                     # primaryjoin="Taxbill.id==Taxbillstandardtaxrecordtaxes.c.standardtaxrecord_id",
@@ -318,11 +355,11 @@ class Taxbill(db.Model):
                     lazy="dynamic",
                     post_update=True
                     )
-    taxable_value = db.Column(db.Integer,default=0,nullable=False)
+    taxable_value = db.Column(db.Integer,default=0)
     # enum status
     total_amount = db.Column(db.Integer)
-    due_date = db.Column(db.DateTime, default=datetime.utcnow,nullable=False)
-    status = db.Column(db.Integer,default=1,nullable=False)
+    due_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.Integer,default=1)
 
     def __repr__(self):
         return "< Bill No: {} to {}>".format(self.billnumber,self.creator)
@@ -330,4 +367,73 @@ class Taxbill(db.Model):
     @property
     def status_msg(self):
         return Status[str(self.status)]
-# 
+
+    def to_json(self):
+        json_taxbill={
+            "id": self.id,
+            "type":"tax bill",
+            "billnumber":self.billnumber,
+            "payer":self.payer.username,
+            "creator":self.creator.username,
+            "pancard":self.payer.pancard if self.payer.pancard else "NA",
+            "taxable_value":self.taxable_value,
+            "total_tax_amount":self.total_amount if self.total_amount else "NO ENTRY FOUND",
+            "due_date(UTC)":self.due_date.strftime("%m/%d/%Y  %H:%M:%S"),
+            "status":self.status_msg}
+        if(self.paidtaxes and self.status==Status["PAID"]):
+            json_taxbill["paid_taxes"]={
+                i:{"taxname":bill.standard.taxname,"percent":bill.percent} for i,bill in enumerate(self.paidtaxes.all())
+            }
+        else:
+            json_taxbill["taxes_to_be_paid"]={
+                i:{"taxname":bill.taxname,"percent":bill.activechild[0].percent} for i,bill in enumerate(self.taxes.all())
+            }
+        return json_taxbill
+
+    @staticmethod
+    def on_status_set_change(target, value, oldvalue, initiator):
+        if(value==4):#paid
+            for stdtax in target.taxes.all():
+                target.paidtaxes.append(stdtax.activechild[0])
+            return
+        # if(value==2):
+        #     #needs to add ta intrest feature
+        #     if(oldvalue in [ 4 , "4" ]):
+        #         target.status=4
+        #         print("cannot convert paid bill to delayed")
+        #         print(value,oldvalue)
+        #     return
+        # if(value==1):
+        #     if(oldvalue in [ 4 , "4" ]):
+        #         target.status=4
+        #         print("cannot convert paid bill to new")
+        #         print(value,oldvalue)
+        #     return
+    @staticmethod
+    def set_total_value(target, value=None, oldvalue=None, initiator=None):
+        if(target.status != 4): #unpaid case attempt to change total amount
+            Taxbill.on_taxes_modification(target)
+        # else:
+        #     Taxbill.total_amount=oldvalue
+    @staticmethod
+    def on_taxes_modification(target, collection=None, collection_adapter=None):
+        if(target.status!=4):
+            taxable_value = target.taxable_value if(target.taxable_value) else 0
+            total_amount = 0
+            print(taxable_value,total_amount)
+            for tax in target.taxes.all():
+                total_amount += taxable_value*tax.activechild[0].percent/100
+                print(taxable_value*tax.activechild[0].percent/100)
+            target.total_amount=total_amount
+            print(target.total_amount,total_amount,target)
+
+
+
+db.event.listen(Taxbill.status, 'set', Taxbill.on_status_set_change)
+db.event.listen(Taxbill.status, 'modified', Taxbill.on_status_set_change)
+
+db.event.listen(Taxbill.taxable_value, 'set', Taxbill.set_total_value)
+db.event.listen(Taxbill.taxable_value, 'modified', Taxbill.set_total_value)
+db.event.listen(Taxbill.taxes,'init_collection', Taxbill.on_taxes_modification)
+db.event.listen(Taxbill.taxes,'append', Taxbill.on_taxes_modification)
+# #
