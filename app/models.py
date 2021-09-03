@@ -306,22 +306,16 @@ class Taxrecord(db.Model):
 from sqlalchemy import UniqueConstraint
 Taxbillstandardtaxrecordtaxes = db.Table(
     'taxbillsstandardtaxrecordtaxes',
-    # db.UniqueConstraint('taxbill_id', 'standardtaxrecord_id', name='unique_keys_id'),
-    # Base.metadata,
     db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id'),primary_key=True),
     db.Column('standardtaxrecord_id', db.Integer, 
             db.ForeignKey('standardtaxrecords.id'),primary_key=True),
-    UniqueConstraint('taxbill_id', 'standardtaxrecord_id', name='uniquekeypairs1')
 )
 
 Taxbilltaxrecordpaidtaxes = db.Table(
     'taxbilltaxrecordpaidtaxes',
-    # db.UniqueConstraint('taxbill_id', 'taxrecord_id', name='unique_keys_id'),
-    # Base.metadata,
     db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id'),primary_key=True),
     db.Column('taxrecord_id', db.Integer, 
             db.ForeignKey('taxrecords.id'),primary_key=True),
-    UniqueConstraint('taxbill_id', 'taxrecord_id', name='uniquekeypairs2')
 )
 
 Status={
@@ -429,11 +423,11 @@ class Taxbill(db.Model):
 
 
 
-db.event.listen(Taxbill.status, 'set', Taxbill.on_status_set_change)
-db.event.listen(Taxbill.status, 'modified', Taxbill.on_status_set_change)
+# db.event.listen(Taxbill.status, 'set', Taxbill.on_status_set_change)
+# db.event.listen(Taxbill.status, 'modified', Taxbill.on_status_set_change)
 
-db.event.listen(Taxbill.taxable_value, 'set', Taxbill.set_total_value)
-db.event.listen(Taxbill.taxable_value, 'modified', Taxbill.set_total_value)
-db.event.listen(Taxbill.taxes,'init_collection', Taxbill.on_taxes_modification)
-db.event.listen(Taxbill.taxes,'append', Taxbill.on_taxes_modification)
+# db.event.listen(Taxbill.taxable_value, 'set', Taxbill.set_total_value)
+# db.event.listen(Taxbill.taxable_value, 'modified', Taxbill.set_total_value)
+# db.event.listen(Taxbill.taxes,'init_collection', Taxbill.on_taxes_modification)
+# db.event.listen(Taxbill.taxes,'append', Taxbill.on_taxes_modification)
 # #
