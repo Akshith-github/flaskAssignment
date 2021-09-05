@@ -256,8 +256,11 @@ class Standardtaxrecord(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     taxname = db.Column(db.String(10))
     allrelatedrecords = db.relationship('Taxrecord', backref='standard', lazy='dynamic',
-        primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id",post_update=True)
+        primaryjoin="Taxrecord.standardtax_id==Standardtaxrecord.id")
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
+    activechild= db.relationship('Taxrecord', backref='activeparent',  uselist=False,
+        primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
+
 
     def  __repr__(self):
         return "<{} StdTax {} {}>".format(self.id,\
@@ -271,8 +274,8 @@ class Standardtaxrecord(db.Model):
             "type":"standard",
             "taxname":self.taxname,
             "state":self.state.statename if self.state else "NA",
-            "current_tax_rec_id":self.activechild[0].id  if (self.activechild and len(self.activechild)==1) else "NA",
-            "current_tax_percent":self.activechild[0].percent if(self.activechild and len(self.activechild)==1) else "NA",
+            "current_tax_rec_id":self.activechild.id  if (self.activechild and len(self.activechild)==1) else "NA",
+            "current_tax_percent":self.activechild.percent if(self.activechild and len(self.activechild)==1) else "NA",
             "billscount":len(self.bills.all())}
         return json_stdtax
 
@@ -283,13 +286,13 @@ class Taxrecord(db.Model):
 
     standardtax_id = db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
     parent_id=db.Column(db.Integer, db.ForeignKey('standardtaxrecords.id'))
-    activeparent = db.relationship('Standardtaxrecord', backref='activechild',  uselist=False,
-        primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
+    # activeparent = db.relationship('Standardtaxrecord', backref='activechild',  uselist=False,
+    #     primaryjoin="Taxrecord.parent_id==Standardtaxrecord.id")
 
     def __repr__(self):
         return "{} TaxRec @{} @{} {}%".format(self.id,
-        self.activeparent.taxname if self.activeparent.taxname else "taxname:NA",
-        self.activeparent.state.statename if self.activeparent.state else "state:NA",
+        self.standard.taxname if self.standard else "taxname:NA",
+        self.standard.state.statename if self.standard and self.standard.state else "state:NA",
         self.percent if self.percent else "percent:NA")
 
     def to_json(self):
@@ -308,14 +311,14 @@ Taxbillstandardtaxrecordtaxes = db.Table(
     'taxbillsstandardtaxrecordtaxes',
     db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id'),primary_key=True),
     db.Column('standardtaxrecord_id', db.Integer, 
-            db.ForeignKey('standardtaxrecords.id'),primary_key=True),
+            db.ForeignKey('standardtaxrecords.id'),primary_key=True)
 )
 
 Taxbilltaxrecordpaidtaxes = db.Table(
     'taxbilltaxrecordpaidtaxes',
     db.Column('taxbill_id', db.Integer, db.ForeignKey('taxbill.id'),primary_key=True),
     db.Column('taxrecord_id', db.Integer, 
-            db.ForeignKey('taxrecords.id'),primary_key=True),
+            db.ForeignKey('taxrecords.id'),primary_key=True)
 )
 
 Status={
@@ -355,11 +358,40 @@ class Taxbill(db.Model):
     due_date = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.Integer,default=1)
 
+    def __init__(self,*args,**kwargs):
+        super(Taxbill, self).__init__(*args,**kwargs)
+        self.set_current_total_amount()
+        
+    def set_current_total_amount(self):
+        if(self.status != 4 and self.taxable_value):
+            total_amount =0
+            taxable_value=self.taxable_value
+            for tax in self.taxes.all():
+                total_amount += taxable_value*tax.activechild.percent/100
+                print(taxable_value*tax.activechild.percent/100)
+            self.total_amount=total_amount
+
+    @property
+    def amount_to_be_paid(self):
+        self.set_current_total_amount()
+        return self.total_amount
+
+    def is_paid(self):
+        if(self.status == 4):
+            return True
+
     def __repr__(self):
         return "< Bill No: {} to {}>".format(self.billnumber,self.creator)
 
     @property
     def status_msg(self):
+        if(self.status!=4):
+            if(datetime.utcnow()>self.due_date):
+                self.status = 2
+            else:
+                self.status = 1
+            db.session.add(self)
+            db.session.commit()
         return Status[str(self.status)]
 
     def to_json(self):
@@ -380,16 +412,22 @@ class Taxbill(db.Model):
             }
         else:
             json_taxbill["taxes_to_be_paid"]={
-                i:{"taxname":bill.taxname,"percent":bill.activechild[0].percent} for i,bill in enumerate(self.taxes.all())
+                i:{"taxname":bill.taxname,"percent":bill.activechild.percent} for i,bill in enumerate(self.taxes.all())
             }
         return json_taxbill
 
     @staticmethod
     def on_status_set_change(target, value, oldvalue, initiator):
         if(value==4):#paid
+            target.set_current_total_amount()
             for stdtax in target.taxes.all():
-                target.paidtaxes.append(stdtax.activechild[0])
+                if stdtax.activechild in target.paidtaxes.all():
+                    continue
+                target.paidtaxes.append(stdtax.activechild)
+                print(target.paidtaxes.all())
             return
+        else:
+            target.set_current_total_amount()
         # if(value==2):
         #     #needs to add ta intrest feature
         #     if(oldvalue in [ 4 , "4" ]):
@@ -403,31 +441,30 @@ class Taxbill(db.Model):
         #         print("cannot convert paid bill to new")
         #         print(value,oldvalue)
         #     return
+    
     @staticmethod
     def set_total_value(target, value=None, oldvalue=None, initiator=None):
-        if(target.status != 4): #unpaid case attempt to change total amount
-            Taxbill.on_taxes_modification(target)
-        # else:
-        #     Taxbill.total_amount=oldvalue
+        if(target.status != 4): 
+            #unpaid case attempt to change total amoun
+            target.set_current_total_amount()
+            return
+        else:
+            Taxbill.taxable_value=oldvalue
+            return
+
     @staticmethod
     def on_taxes_modification(target, collection=None, collection_adapter=None):
         if(target.status!=4):
-            taxable_value = target.taxable_value if(target.taxable_value) else 0
-            total_amount = 0
-            print(taxable_value,total_amount)
-            for tax in target.taxes.all():
-                total_amount += taxable_value*tax.activechild[0].percent/100
-                print(taxable_value*tax.activechild[0].percent/100)
-            target.total_amount=total_amount
-            print(target.total_amount,total_amount,target)
+            target.set_current_total_amount()
 
 
 
-# db.event.listen(Taxbill.status, 'set', Taxbill.on_status_set_change)
-# db.event.listen(Taxbill.status, 'modified', Taxbill.on_status_set_change)
+db.event.listen(Taxbill.status, 'set', Taxbill.on_status_set_change)
+db.event.listen(Taxbill.status, 'modified', Taxbill.on_status_set_change)
 
-# db.event.listen(Taxbill.taxable_value, 'set', Taxbill.set_total_value)
-# db.event.listen(Taxbill.taxable_value, 'modified', Taxbill.set_total_value)
-# db.event.listen(Taxbill.taxes,'init_collection', Taxbill.on_taxes_modification)
+db.event.listen(Taxbill.taxable_value, 'set', Taxbill.set_total_value)
+db.event.listen(Taxbill.taxable_value, 'modified', Taxbill.set_total_value)
+
+db.event.listen(Taxbill.taxes,'init_collection', Taxbill.on_taxes_modification)
 # db.event.listen(Taxbill.taxes,'append', Taxbill.on_taxes_modification)
 # #

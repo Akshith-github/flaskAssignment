@@ -1,0 +1,13 @@
+<script>
+    date_inp = document.querySelector("#duedateloc")
+    date_utc = document.querySelector("#duedate")
+    if(date_inp){
+    date_inp.onchange = () =>{
+        console.log(date_inp.value);
+        d= Date.parse(date_inp.value);
+        dd = new Date(d);
+        monthinp=dd.getUTCMonth()+1
+        date_utc.value=dd.getUTCFullYear()+"-"+monthinp.toString().padStart(2, '0')+"-"+dd.getUTCDate().toString().padStart(2, '0')+" "+dd.getUTCHours().toString().padStart(2, '0')+":"+dd.getUTCMinutes().toString().padStart(2, '0')+":"+dd.getUTCSeconds().toString().padStart(2, '0')
+    }}
+    // date_utc.setAttribute('disabled','true')
+</script>

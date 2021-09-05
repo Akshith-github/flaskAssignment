@@ -1,5 +1,11 @@
-<div class="panel panel-default">
-    <div class="panel-heading">Paid taxes</div>
+<div class="row">
+    <div class="panel panel-default filterable">
+    <div class="panel-heading">
+        <h3 class="panel-title">Your bills</h3>
+        <div class="pull-right">
+            <button class="btn btn-default btn-xs btn-filter"><span class="glyphicon glyphicon-filter"></span> Filter</button>
+        </div>
+    </div>
     <div class="panel-body">
         <p>Paid taxes are highlighted with green background.
             <span style="height:1rem;width:1rem;background-color:lightgreen;padding:0.2rem;border-radius:4px;">
@@ -17,33 +23,17 @@
             </span>
         </p>
     </div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>related accountant</th>
-                <th>tax amount</th>
-                <th>duedate</th>
-                <th>status</th>
-            </tr>
-        </thead>
+    <table class="table table-hover">
+        {% include 'billstablehead.html' %}
         <tbody>
-            {% for bill in current_user.taxbills.all()   %}
-                <tr
-                    style="background-color:
-                    {{
-                        'lightgreen' if(bill.status_msg == 'PAID') else 'lightyellow' if(bill.status_msg == 'NEW') else 'red'
-                    }}
-                    "
-                >
-                    <th scope="row">1</th>
-                    <td>{{bill.creator.username}}</td>
-                    <td>{{bill.total_amount}}</td>
-                    <td>{{bill.due_date.strftime("%m/%d/%Y  %H:%M:%S")}}</td>
-                    <td>
-                        {{bill.status_msg}}
-                    </td>
-                </tr>
+            {% for idx,bill in enumerate(current_user.taxbills.all())   %}
+                {% if  req_bill and req_bill.billnumber==bill.billnumber %}
+                    
+                {% else %}
+                {% include 'billdetails_iteration.html' %}
+                
+                    
+                {% endif %}
             {% endfor %}
         </tbody>
     </table>

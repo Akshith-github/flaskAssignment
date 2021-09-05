@@ -47,5 +47,7 @@ def create_app(config_name):
 
     from .main.forms import ProfileForm
     app.jinja_env.globals.update(ProfileForm=ProfileForm)
-
+    app.jinja_env.globals.update(enumerate=enumerate)
+    # print(dir(app.jinja_env.globals),type(app.jinja_env.globals))
+    app.jinja_env.globals.update({"User":User,"Role":Role,"State":State,"Taxbill":Taxbill,"Standardtaxrecord":Standardtaxrecord,"Taxrecord":Taxrecord})
     return app

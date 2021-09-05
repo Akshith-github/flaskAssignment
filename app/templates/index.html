@@ -4,21 +4,23 @@
 {% block title %}Smart GST Portal{% endblock %}
 
 {% block page_content %}
-<div class="page-header">
-    <h1>Hello, 
-        {% if current_user.is_authenticated %}
-        {{ current_user.username }}
+<div class="container">
+    {% if current_user.role.name!="User" %}
+        {% if accntnt_view %}
+            <a type="button" class="btn btn-primary" style="float: right" 
+                href="{{url_for('main.index')}}">
+                switch to User mode</a>
         {% else %}
-        Stranger{% endif %}!</h1>
-    {% if  current_user.is_authenticated %}
-        {% if ProfileFormObj %}
-            {{ wtf.quick_form(ProfileFormObj,action=url_for('main.profileform')) }}
-        {% else %}
-            {{ wtf.quick_form(ProfileForm().configure_to_current_user(),action=url_for('main.profileform')) }}
+            <a type="button" class="btn btn-primary" style="float: right" 
+                href="{{url_for('main.accntnt_view')}}">
+            switch to officer mode</a>
         {% endif %}
     {% endif %}
+
+    {% if accntnt_view %}
+        {% include 'accntnt_index.html' %}
+    {% else %}
+        {% include 'user_index.html' %}
+    {% endif %}
 </div>
-{% if  current_user.is_authenticated %}
-    {%include 'taxes2.html' %}
-{% endif %}
 {% endblock %}
