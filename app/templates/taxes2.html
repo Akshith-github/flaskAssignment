@@ -1,0 +1,40 @@
+<div class="row">
+    <div class="panel panel-default filterable">
+    <div class="panel-heading">
+        <h3 class="panel-title">Your bills</h3>
+        <div class="pull-right">
+            <button class="btn btn-default btn-xs btn-filter"><span class="glyphicon glyphicon-filter"></span> Filter</button>
+        </div>
+    </div>
+    <div class="panel-body">
+        <p>Paid taxes are highlighted with green background.
+            <span style="height:1rem;width:1rem;background-color:lightgreen;padding:0.2rem;border-radius:4px;">
+                paid
+            </span>
+        </p>
+        <p>pending are with lightyellow background color.
+            <span style="height:1rem;width:1rem;background-color:lightyellow;padding:0.2rem;border-radius:4px;">
+                pending
+            </span>
+        </p> 
+        <p>Delayed taxes are highlighted with red colour
+            <span style="height:1rem;width:1rem;background-color:red;padding:0.2rem;border-radius:4px;">
+                delayed
+            </span>
+        </p>
+    </div>
+    <table class="table table-hover">
+        {% include 'billstablehead.html' %}
+        <tbody>
+            {% for idx,bill in enumerate(current_user.taxbills.all())   %}
+                {% if  req_bill and req_bill.billnumber==bill.billnumber %}
+                    
+                {% else %}
+                {% include 'billdetails_iteration.html' %}
+                
+                    
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -32,5 +32,14 @@ class MyAdminIndexView(AdminIndexView):
         return abort(404)
 
 def addModelstoAdmin(admin,models,db):
+    """add Models to Admin
+    
+    Keyword arguments:
+    admin -- Admin instance
+    models -- [(db.Model object)*]
+    db -- Sqlite database instance
+    Return: return_description
+    """
+    
     for table in models:
         admin.add_view(MyModelView(table, db.session))

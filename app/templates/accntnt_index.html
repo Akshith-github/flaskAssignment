@@ -1,0 +1,39 @@
+{% if current_user.is_authenticated and current_user.role.name!="User" %}
+    <h1>Hello, 
+        {% if current_user.is_authenticated %}
+        {{ current_user.username }}
+        {% else %}
+        Stranger{% endif %}!
+        <span style="float:right;">🏢 accountant mode</span>
+    </h1>
+    {% if current_user.is_authenticated %}
+        <details>
+            <summary class="page-header bg-primary" style="padding:0.8rem;width:100%;" role="button">
+                Create New Bill (click 🖱️ here to show/hide)</summary>
+            <div class="container" style="border:2px solid gray">
+                {% import "bootstrap/wtf.html" as wtf %}
+                {{ wtf.quick_form(CreateBillFormObj,action=url_for('main.create_bill')) }}
+                {% include 'timelocalutc.html' %}
+            </div>
+        </details>
+        <details>
+            <summary class="page-header bg-primary" style="padding:0.8rem;width:100%;" role="button"> 
+                &gt; Created Bills (click 🖱️ here to show/hide)</summary>
+            <div class="container">
+                {% if  current_user.is_authenticated %}
+                    {%include 'created_bills.html' %}
+                {% endif %}
+            </div>
+        </details>
+        <details>
+            <summary class="page-header bg-primary" style="padding:0.8rem;width:100%;" role="button"> 
+                &gt; All Bills (click 🖱️ here to show/hide)</summary>
+            <div class="container">
+                {% if  current_user.is_authenticated %}
+                    {%include 'allbills.html' %}
+                {% endif %}
+            </div>
+        </details>
+    {% endif %}
+    </div>
+{% endif %}

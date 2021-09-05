@@ -1,0 +1,24 @@
+<h1>Hello, 
+    {% if current_user.is_authenticated %}
+    {{ current_user.username }}
+    {% else %}
+    Stranger{% endif %}!</h1>
+{% if current_user.is_authenticated %}
+    <details>
+        <summary class="page-header bg-primary" style="padding:0.8rem;width:100%;" role="button"> 
+            &gt; Profile Details Form (click 🖱️ here to edit/hide form)</summary>
+        <p>
+            <div>
+                {% if ProfileFormObj %}
+                {{ wtf.quick_form(ProfileFormObj,action=url_for('main.profileform')) }}
+            {% else %}
+                {{ wtf.quick_form(ProfileForm().configure_to_current_user(),action=url_for('main.profileform')) }}
+            {% endif %}
+            </div>
+        </p>
+    </details>
+{% endif %}
+</div>
+{% if  current_user.is_authenticated %}
+{%include 'taxes2.html' %}
+{% endif %}

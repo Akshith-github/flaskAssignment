@@ -1,0 +1,9 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+{{ super() }}
+        <p>{{current_user.username}}</p>
+        <p>{{current_user.role.name }}</p>
+        <p>{{current_user.email }}</p>
+    {% include 'index.html' %}
+{% endblock %}
