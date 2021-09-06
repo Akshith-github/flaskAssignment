@@ -16,9 +16,10 @@ To run in production mode , pass the following environment variables:
   3. *SECRET_KEY   ====>  some random 
   4. MAIL_USERNAME===> mail used to send login related mails to users
   5. MAIL_PASSWORD ==> password related to MAIL_USERNAME account.
+>docker run --rm -it -p 8000:5000 -e SECRET_KEY=57d40f677aff4d8d96df97223c74d217 -e MAIL_USERNAME=mail@gmail.com -e MAIL_PASSWORD=mailpassword flaskassgn -e FLASK_ADMIN=admin@me.com -e FLASK_CONFIG=docker
 ---
 ## Features developed: ##
-  1) taxpayer can list view , filter taxes and pay tax bills.
+  1) taxpayer can list view , filter taxes and pay tax bills with taxes related to only their states.
   2) tax accountant an create tax like CGST, SGST,state taxes managemnt and tax bills to all users.
     Also : 
       1) create tax bills
