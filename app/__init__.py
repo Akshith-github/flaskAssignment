@@ -5,7 +5,7 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import config
-from .admin import Admin,MyAdminIndexView,MyModelView,addModelstoAdmin
+from .admin import Admin,MyAdminIndexView,MyModelView,addModelstoAdmin,addModelstoAccntnt
 
 bootstrap = Bootstrap()
 mail = Mail()
@@ -33,7 +33,8 @@ def create_app(config_name):
     # Taxbill
     # Standardtaxrecord
     # Taxrecord
-    addModelstoAdmin(admin,[User,Role,State,Taxbill,Standardtaxrecord,Taxrecord],db)
+    addModelstoAdmin(admin,[User,Role,Taxbill],db)
+    addModelstoAccntnt(admin,[State,Standardtaxrecord,Taxrecord],db)
 
 
     from .main import main as main_blueprint

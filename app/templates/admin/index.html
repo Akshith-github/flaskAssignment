@@ -1,5 +1,5 @@
 {% extends 'admin/master.html' %}
-
+{% if current_user.is_authenticated %}
 {% block body %}
 {{ super() }}
         <p>{{current_user.username}}</p>
@@ -7,3 +7,4 @@
         <p>{{current_user.email }}</p>
     {% include 'index.html' %}
 {% endblock %}
+{% endif %}

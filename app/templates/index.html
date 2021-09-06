@@ -5,7 +5,7 @@
 
 {% block page_content %}
 <div class="container">
-    {% if current_user.role.name!="User" %}
+    {% if current_user.is_authenticated and current_user.role.name!="User" %}
         {% if accntnt_view %}
             <a type="button" class="btn btn-primary" style="float: right" 
                 href="{{url_for('main.index')}}">
