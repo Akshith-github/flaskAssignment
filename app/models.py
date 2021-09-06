@@ -2,7 +2,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
-from flask import current_app, request, url_for
+from flask import current_app, request, url_for,jsonify
 from flask_login import UserMixin, AnonymousUserMixin
 from app.exceptions import ValidationError
 from . import db, login_manager
@@ -213,7 +213,8 @@ class User(UserMixin, db.Model):
             'pancard':self.pancard,
             'role':self.role.name,
             'state':self.state.statename if self.state else "NA",
-            'pending_bills':len(self.taxbills.filter(Taxbill.status<4).all())
+            'pending_bills': ([ bill.to_json() for bill in self.taxbills.filter(Taxbill.status<4).all() ]),
+            'taxbills': ([ bill.to_json() for bill in self.taxbills ])
         }
         return json_user
 
@@ -401,7 +402,7 @@ class Taxbill(db.Model):
             "billnumber":self.billnumber,
             "payer":self.payer.username,
             "creator":self.creator.username,
-            "pancard":self.payer.pancard if self.payer.pancard else "NA",
+            "pancard":self.payer.pancard if self.payer and self.payer.pancard else "NA",
             "taxable_value":self.taxable_value,
             "total_tax_amount":self.total_amount if self.total_amount else "NO ENTRY FOUND",
             "due_date(UTC)":self.due_date.strftime("%m/%d/%Y  %H:%M:%S"),

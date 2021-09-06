@@ -1,5 +1,6 @@
 #!/bin/bash
 # this script is used to boot a Docker container
+echo Started
 source venv/bin/activate
 while true; do
     flask db upgrade
