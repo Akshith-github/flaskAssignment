@@ -11,6 +11,7 @@ RUN venv/bin/pip install gunicorn
 
 COPY app app
 COPY migrations migrations
+COPY tests tests
 COPY flasky.py config.py boot.sh ./
 RUN chmod +x boot.sh
 

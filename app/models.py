@@ -111,7 +111,7 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean, default=True)
-    pancard=db.Column(db.String(10),CheckConstraint("pancard ~ '^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$'"),unique=True,index=True)
+    pancard=db.Column(db.String(10),unique=True,index=True)
     state_id = db.Column(db.Integer, db.ForeignKey('states.id'))
     taxbills = db.relationship('Taxbill', backref='payer', lazy='dynamic',primaryjoin="Taxbill.payer_id==User.id")
     created_bills = db.relationship('Taxbill', backref='creator', lazy='dynamic',primaryjoin="Taxbill.creator_id==User.id")
@@ -207,7 +207,7 @@ class User(UserMixin, db.Model):
     
     def to_json(self):
         json_user = {
-            'url': url_for('api.get_user', id=self.id),
+            # 'url': url_for('api.get_user', id=self.id),
             'username': self.username,
             'email':self.email,
             'pancard':self.pancard,
@@ -360,8 +360,15 @@ class Taxbill(db.Model):
     status = db.Column(db.Integer,default=1)
 
     def __init__(self,*args,**kwargs):
+        total_amount =0
+        taxable_value=self.taxable_value
+        # print(self.taxes.all())
+        for tax in self.taxes.all():
+            total_amount += taxable_value*tax.activechild.percent/100
+            # print(taxable_value*tax.activechild.percent/100)
+        self.total_amount=total_amount
+        # print("total:",self.total_amount,total_amount)
         super(Taxbill, self).__init__(*args,**kwargs)
-        self.set_current_total_amount()
         
     def set_current_total_amount(self):
         if(self.status != 4 and self.taxable_value):
@@ -369,7 +376,6 @@ class Taxbill(db.Model):
             taxable_value=self.taxable_value
             for tax in self.taxes.all():
                 total_amount += taxable_value*tax.activechild.percent/100
-                print(taxable_value*tax.activechild.percent/100)
             self.total_amount=total_amount
 
     @property
@@ -425,7 +431,7 @@ class Taxbill(db.Model):
                 if stdtax.activechild in target.paidtaxes.all():
                     continue
                 target.paidtaxes.append(stdtax.activechild)
-                print(target.paidtaxes.all())
+                # print(target.paidtaxes.all())
             return
         else:
             target.set_current_total_amount()
