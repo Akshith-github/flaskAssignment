@@ -1,0 +1,23 @@
+<tr style="background-color:{{'lightgreen' if(bill.status_msg == 'PAID') else 'lightyellow' if(bill.status_msg == 'NEW') else 'red'}}" data-href="{{ url_for('main.bill',billno=bill.billnumber)}}">
+    <td>{{idx+1}}</td>
+    <td>{{bill.billnumber}}</td>
+    <td>{{bill.payer.username}}</td>
+    <td>{{bill.creator.username}}</td>
+    <td>
+        {% if accntnt_view %}
+        <a href="{{ url_for('main.edit_bill',billnumber=bill.billnumber)}}">
+            Link to Edit bill
+        </a>
+        {% else %}
+        <a href="{{ url_for('main.bill',billno=bill.billnumber)}}">
+            Link to bill page
+        </a>
+        {% endif %}
+    </td>
+    <td>{{bill.total_amount}}</td>
+    <td>{{ moment(bill.due_date).format('LLL')}}</td>
+    <!-- .strftime("%m/%d/%Y  %H:%M:%S") -->
+    <td>
+        {{bill.status_msg}}
+    </td>
+</tr>

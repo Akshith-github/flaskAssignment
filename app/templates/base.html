@@ -1,0 +1,60 @@
+{% extends "bootstrap/base.html" %}
+{% import 'admin/static.html' as admin_static with context %}
+{% block title %}Flasky{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+<link rel="stylesheet" href="{{ url_for('static', filename='daterangepicker-bs2.css') }}">
+<style>
+    .filterable {
+    margin-top: 15px;
+}
+.filterable .panel-heading .pull-right {
+    margin-top: -20px;
+}
+.filterable .filters input[disabled] {
+    background-color: transparent;
+    border: none;
+    cursor: auto;
+    box-shadow: none;
+    padding: 0;
+    height: auto;
+}
+.filterable .filters input[disabled]::-webkit-input-placeholder {
+    color: #333;
+}
+.filterable .filters input[disabled]::-moz-placeholder {
+    color: #333;
+}
+.filterable .filters input[disabled]:-ms-input-placeholder {
+    color: #333;
+}
+</style>
+{% endblock %}
+
+{% include 'navbar.html' %}
+
+{% block content %}
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block page_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{{ moment.include_moment() }}
+<script src="{{url_for('static',filename='filter.js') }}"></script>
+<script src="{{ url_for('static',filename='moment.min.js') }}"></script>
+<script src="{{ url_for('static',filename='form.js') }}"></script>
+<script src="{{ url_for('static',filename='daterangepicker.js') }}"></script>
+
+{% endblock %}

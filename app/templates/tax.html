@@ -1,0 +1,77 @@
+<div class="panel panel-default">
+    <div class="panel-heading">Tax Bill number : {{req_bill.billnumber}}</div>
+    <div class="panel-body">
+        
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th colspan="2">Bill Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Payer</td>
+                <td>{{req_bill.payer.username}}</td>
+            </tr>
+            <tr>
+                <td>Creator</td>
+                <td>{{req_bill.creator.username}}</td>
+            </tr>
+            <tr>
+                <td>Taxable value (INR) </td>
+                <td>Rs.{{req_bill.taxable_value}}</td>
+            </tr>
+            <tr>
+                <td>Tax amount (INR) </td>
+                <td>Rs.{{req_bill.amount_to_be_paid}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Taxes Included
+                </td>
+                <td>
+                    <ol>
+                    {% if  req_bill.is_paid() %}
+                        {% for tax in req_bill.paidtaxes.all() %}
+                        <li>
+                            {{tax.standard.taxname}}
+                            {{tax.percent}}%
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        {% for tax in req_bill.taxes.all() %}
+                            <li>
+                                {{tax.taxname}}
+                                {{tax.activechild.percent}}%
+                            </li>
+                        {% endfor %}
+                    {% endif %}
+                    </ol>
+                </td>
+            </tr>
+            <tr>
+                <td>Due Date</td>
+                <td id="duedatestr">
+                    {{ moment(req_bill.due_date).format('LLL')}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Status
+                </td>
+                <td>
+                    {{req_bill.status_msg}}
+                </td>
+            </tr>
+            {% if not req_bill.is_paid() and not accntnt_view %}
+            {% import "bootstrap/wtf.html" as wtf %}
+                <tr>
+                    <td colspan="2" class="align-items-center">
+                        {{ wtf.quick_form(PayFormObj,action=url_for('main.pay_bill',billno=req_bill.billnumber)) }}
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>

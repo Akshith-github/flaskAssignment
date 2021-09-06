@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Smart GST Portal{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Tax Bill number : {{req_bill.billnumber}} </h1>
+</div>
+<div class="container align-items-center" style="font-size:2rem">
+    {% include 'tax.html' %}
+</div>
+
+{% if accntnt_view %}
+<div class="container" style="border-radius: 5px;border:2px solid gray">
+    <h3 class="page-header">Edit bill</h3>
+    {{ wtf.quick_form(UpdateBillFormObj,action=url_for('main.update_bill',billnumber=req_bill.billnumber)) }}
+</div>
+{% endif %}
+{% if  current_user.is_authenticated and not accntnt_view %}
+    <div class="container">
+        <h3 class="page-header">My Other Taxes</h3>
+            {%include 'taxes2.html' %}
+    </div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+    $(document).ready(
+        function() { 
+    if( document.querySelector("input#duedateloc") && (! document.querySelector("input#duedateloc").value)){
+        // var theDate = new Date(document.getElementById("duedatestr").innerText)
+        // document.querySelector("input#duedateloc").value=moment(theDate).format('YYYY-MM-DD HH:mm:ss')
+        timestr="{{req_bill.due_date.strftime("%m/%d/%Y  %H:%M:%S")}}"+" utc";
+        document.querySelector("input#duedateloc").value=moment(timestr).format("YYYY-MM-DD HH:mm:ss")
+    }})
+</script>
+{% endblock %}
